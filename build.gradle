@@ -17,12 +17,15 @@ archivesBaseName = 'ForgeGradle'
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
 
+//Compile against UTF-8
+compileTestJava.options.encoding = 'UTF-8'
+javadoc.options.encoding = 'UTF-8'
+compileJava.options.encoding = 'UTF-8'
+
 repositories {
-    mavenLocal()
-    maven {
-        name = "forge"
-        url = "http://files.minecraftforge.net/maven"
-    }
+	mavenLocal()
+    mavenCentral()
+	jcenter()
 	maven {
 		name = "gt"
 		url = "https://gregtech.overminddl1.com/"
@@ -36,8 +39,11 @@ repositories {
         // because SpecialSource doesnt have a full release
         name = "sonatype"
         url = "https://oss.sonatype.org/content/repositories/snapshots/"
+    }	
+    maven {
+        name = "forge"
+        url = "http://files.minecraftforge.net/maven"
     }
-    mavenCentral()
     maven {
         name = "mojang"
         url = "https://libraries.minecraft.net/"

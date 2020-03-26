@@ -37,392 +37,434 @@ import com.google.common.io.Files;
 
 public abstract class GradleStartCommon
 {
-    protected static Logger     LOGGER          = LogManager.getLogger("GradleStart");
-    private static final String NO_CORE_SEARCH  = "noCoreSearch";
+	protected static Logger     LOGGER          = LogManager.getLogger("GradleStart");
+	private static final String NO_CORE_SEARCH  = "noCoreSearch";
 
-    private Map<String, String> argMap          = Maps.newHashMap();
-    private List<String>        extras          = Lists.newArrayList();
+	private Map<String, String> argMap          = Maps.newHashMap();
+	private List<String>        extras          = Lists.newArrayList();
 
-    private static final File   SRG_DIR         = new File("@@SRGDIR@@");
-    private static final File   SRG_NOTCH_SRG   = new File("@@SRG_NOTCH_SRG@@");
-    private static final File   SRG_NOTCH_MCP   = new File("@@SRG_NOTCH_MCP@@");
-    private static final File   SRG_SRG_MCP     = new File("@@SRG_SRG_MCP@@");
-    private static final File   SRG_MCP_SRG     = new File("@@SRG_MCP_SRG@@");
-    private static final File   SRG_MCP_NOTCH   = new File("@@SRG_MCP_NOTCH@@");
-    private static final File   CSV_DIR         = new File("@@CSVDIR@@");
+	private static final File   SRG_DIR         = new File("@@SRGDIR@@");
+	private static final File   SRG_NOTCH_SRG   = new File("@@SRG_NOTCH_SRG@@");
+	private static final File   SRG_NOTCH_MCP   = new File("@@SRG_NOTCH_MCP@@");
+	private static final File   SRG_SRG_MCP     = new File("@@SRG_SRG_MCP@@");
+	private static final File   SRG_MCP_SRG     = new File("@@SRG_MCP_SRG@@");
+	private static final File   SRG_MCP_NOTCH   = new File("@@SRG_MCP_NOTCH@@");
+	private static final File   CSV_DIR         = new File("@@CSVDIR@@");
 
-    protected abstract void setDefaultArguments(Map<String, String> argMap);
+	protected abstract void setDefaultArguments(Map<String, String> argMap);
 
-    protected abstract void preLaunch(Map<String, String> argMap, List<String> extras);
+	protected abstract void preLaunch(Map<String, String> argMap, List<String> extras);
 
-    protected abstract String getBounceClass();
+	protected abstract String getBounceClass();
 
-    protected abstract String getTweakClass();
+	protected abstract String getTweakClass();
 
-    protected void launch(String[] args) throws Throwable
-    {
-        // DEPRECATED, use the properties below instead!
-        System.setProperty("net.minecraftforge.gradle.GradleStart.srgDir", SRG_DIR.getCanonicalPath());
-        
-        // set system vars for passwords
-        System.setProperty("net.minecraftforge.gradle.GradleStart.srg.notch-srg", SRG_NOTCH_SRG.getCanonicalPath());
-        System.setProperty("net.minecraftforge.gradle.GradleStart.srg.notch-mcp", SRG_NOTCH_MCP.getCanonicalPath());
-        System.setProperty("net.minecraftforge.gradle.GradleStart.srg.srg-mcp", SRG_SRG_MCP.getCanonicalPath());
-        System.setProperty("net.minecraftforge.gradle.GradleStart.srg.mcp-srg", SRG_MCP_SRG.getCanonicalPath());
-        System.setProperty("net.minecraftforge.gradle.GradleStart.srg.mcp-notch", SRG_MCP_NOTCH.getCanonicalPath());
-        System.setProperty("net.minecraftforge.gradle.GradleStart.csvDir", CSV_DIR.getCanonicalPath());
+	protected void launch(String[] args) throws Throwable
+	{
+    	LOGGER.info("Loading ForgeGradle 1.3 - By Alkalus");
+    	
+		// DEPRECATED, use the properties below instead!
+		System.setProperty("net.minecraftforge.gradle.GradleStart.srgDir", SRG_DIR.getCanonicalPath());
 
-        // set defaults!
-        setDefaultArguments(argMap);
+		// set system vars for passwords
+		System.setProperty("net.minecraftforge.gradle.GradleStart.srg.notch-srg", SRG_NOTCH_SRG.getCanonicalPath());
+		System.setProperty("net.minecraftforge.gradle.GradleStart.srg.notch-mcp", SRG_NOTCH_MCP.getCanonicalPath());
+		System.setProperty("net.minecraftforge.gradle.GradleStart.srg.srg-mcp", SRG_SRG_MCP.getCanonicalPath());
+		System.setProperty("net.minecraftforge.gradle.GradleStart.srg.mcp-srg", SRG_MCP_SRG.getCanonicalPath());
+		System.setProperty("net.minecraftforge.gradle.GradleStart.srg.mcp-notch", SRG_MCP_NOTCH.getCanonicalPath());
+		System.setProperty("net.minecraftforge.gradle.GradleStart.csvDir", CSV_DIR.getCanonicalPath());
 
-        // parse stuff
-        parseArgs(args);
+		// set defaults!
+		setDefaultArguments(argMap);
 
-        // now send it back for prelaunch
-        preLaunch(argMap, extras);
+		// parse stuff
+		parseArgs(args);
 
-        // because its the dev env.
-        System.setProperty("fml.ignoreInvalidMinecraftCertificates", "true"); // cant hurt. set it now.
+		// now send it back for prelaunch
+		preLaunch(argMap, extras);
 
-        // coremod searching.
-        if (argMap.get(NO_CORE_SEARCH) == null)
-            searchCoremods();
-        else
-            LOGGER.info("GradleStart coremod searching disabled!");
+		// because its the dev env.
+		System.setProperty("fml.ignoreInvalidMinecraftCertificates", "true"); // cant hurt. set it now.
 
-        // now the actual launch args.
-        args = getArgs();
+		//hack natives
+    	LOGGER.info("Attempting to 'hack natives'.");
+		hackNatives();
+		
+		// coremod searching.
+		if (argMap.get(NO_CORE_SEARCH) == null)
+			searchCoremods();
+		else
+			LOGGER.info("GradleStart coremod searching disabled!");
 
-        // clear it out
-        argMap = null;
-        extras = null;
+		// now the actual launch args.
+		args = getArgs();
 
-        // launch.
-        System.gc();
-        String bounce = getBounceClass(); // marginally faster. And we need the launch wrapper anyways.
-        if (bounce.endsWith("launchwrapper.Launch"))
-            Launch.main(args);
-        else
-            Class.forName(getBounceClass()).getDeclaredMethod("main", String[].class).invoke(null, new Object[] { args });
-    }
+		// clear it out
+		argMap = null;
+		extras = null;
+		
+		// launch.
+		System.gc();
+		String bounce = getBounceClass(); // marginally faster. And we need the launch wrapper anyways.
+		if (bounce.endsWith("launchwrapper.Launch"))
+			Launch.main(args);
+		else
+			Class.forName(getBounceClass()).getDeclaredMethod("main", String[].class).invoke(null, new Object[] { args });
+	}
 
-    private String[] getArgs()
-    {
-        ArrayList<String> list = new ArrayList<String>(22);
+	private String[] getArgs()
+	{
+		ArrayList<String> list = new ArrayList<String>(22);
 
-        for (Map.Entry<String, String> e : argMap.entrySet())
-        {
-            String val = e.getValue();
-            if (!Strings.isNullOrEmpty(val))
-            {
-                list.add("--" + e.getKey());
-                list.add(val);
-            }
-        }
+		for (Map.Entry<String, String> e : argMap.entrySet())
+		{
+			String val = e.getValue();
+			if (!Strings.isNullOrEmpty(val))
+			{
+				list.add("--" + e.getKey());
+				list.add(val);
+			}
+		}
 
-        // grab tweakClass
-        if (!Strings.isNullOrEmpty(getTweakClass()))
-        {
-            list.add("--tweakClass");
-            list.add(getTweakClass());
-        }
+		// grab tweakClass
+		if (!Strings.isNullOrEmpty(getTweakClass()))
+		{
+			list.add("--tweakClass");
+			list.add(getTweakClass());
+		}
 
-        if (extras != null)
-        {
-            list.addAll(extras);
-        }
+		if (extras != null)
+		{
+			list.addAll(extras);
+		}
 
-        String[] out = list.toArray(new String[0]);
+		String[] out = list.toArray(new String[0]);
 
-        // final logging.
-        StringBuilder b = new StringBuilder();
-        b.append('[');
-        for (int x = 0; x < out.length; x++)
-        {
-            b.append(out[x]).append(", ");
-            if ("--accessToken".equalsIgnoreCase(out[x]))
-            {
-                b.append("{REDACTED}, ");
-                x++;
-            }
-        }
-        b.replace(b.length() - 2, b.length(), "");
-        b.append(']');
-        GradleStartCommon.LOGGER.info("Running with arguments: " + b.toString());
+		// final logging.
+		StringBuilder b = new StringBuilder();
+		b.append('[');
+		for (int x = 0; x < out.length; x++)
+		{
+			b.append(out[x]).append(", ");
+			if ("--accessToken".equalsIgnoreCase(out[x]))
+			{
+				b.append("{REDACTED}, ");
+				x++;
+			}
+		}
+		b.replace(b.length() - 2, b.length(), "");
+		b.append(']');
+		GradleStartCommon.LOGGER.info("Running with arguments: " + b.toString());
 
-        return out;
-    }
+		return out;
+	}
 
-    private void parseArgs(String[] args)
-    {
-        final OptionParser parser = new OptionParser();
-        parser.allowsUnrecognizedOptions();
+	private void parseArgs(String[] args)
+	{
+		final OptionParser parser = new OptionParser();
+		parser.allowsUnrecognizedOptions();
 
-        for (String key : argMap.keySet())
-        {
-            parser.accepts(key).withRequiredArg().ofType(String.class);
-        }
-        // accept the noCoreSearch thing
-        parser.accepts(NO_CORE_SEARCH);
+		for (String key : argMap.keySet())
+		{
+			parser.accepts(key).withRequiredArg().ofType(String.class);
+		}
+		// accept the noCoreSearch thing
+		parser.accepts(NO_CORE_SEARCH);
 
-        final NonOptionArgumentSpec<String> nonOption = parser.nonOptions();
+		final NonOptionArgumentSpec<String> nonOption = parser.nonOptions();
 
-        final OptionSet options = parser.parse(args);
-        for (String key : argMap.keySet())
-        {
-            if (options.hasArgument(key))
-            {
-                String value = (String) options.valueOf(key);
-                argMap.put(key, value);
-                if (!"password".equalsIgnoreCase(key))
-                    LOGGER.info(key + ": " + value);
-            }
-        }
+		final OptionSet options = parser.parse(args);
+		for (String key : argMap.keySet())
+		{
+			if (options.hasArgument(key))
+			{
+				String value = (String) options.valueOf(key);
+				argMap.put(key, value);
+				if (!"password".equalsIgnoreCase(key))
+					LOGGER.info(key + ": " + value);
+			}
+		}
 
-        if (options.has(NO_CORE_SEARCH))
-            argMap.put(NO_CORE_SEARCH, "");
+		if (options.has(NO_CORE_SEARCH))
+			argMap.put(NO_CORE_SEARCH, "");
 
-        extras = Lists.newArrayList(nonOption.values(options));
-        LOGGER.info("Extra: " + extras);
-    }
+		extras = Lists.newArrayList(nonOption.values(options));
+		LOGGER.info("Extra: " + extras);
+	}
 
-    /* ----------- REFLECTION HELPER --------- */
+	protected static void hackNatives()
+	{
+		String paths = System.getProperty("java.library.path");
+		String nativesDir = "@@NATIVESDIR@@";
 
-    private static final String MC_VERSION   = "@@MCVERSION@@";
-    private static final String FML_PACK_OLD = "cpw.mods";
-    private static final String FML_PACK_NEW = "net.minecraftforge";
+		if (Strings.isNullOrEmpty(paths))
+			paths = nativesDir;
+		else
+			paths += File.pathSeparator + nativesDir;
 
-    @SuppressWarnings("rawtypes")
-    protected static Class getFmlClass(String classname) throws ClassNotFoundException
-    {
-        return getFmlClass(classname, GradleStartCommon.class.getClassLoader());
-    }
+		System.setProperty("java.library.path", paths);
 
-    @SuppressWarnings("rawtypes")
-    public static Class getFmlClass(String classname, ClassLoader loader) throws ClassNotFoundException
-    {
-        if (!classname.startsWith("fml")) // dummy check myself
-            throw new IllegalArgumentException("invalid FML classname");
+		// hack the classloader now.
+		try
+		{
+			String aPathData = System.getProperty("java.library.path");
+			GradleStartCommon.LOGGER.info("[FG_1.3] Doing Classloader hack.");
+			final Method initializePathMethod = ClassLoader.class.getDeclaredMethod("initializePath", String.class);
+			GradleStartCommon.LOGGER.info("[FG_1.3] Setting private method 'initializePath' to be accessible.");
+			initializePathMethod.setAccessible(true);
+			GradleStartCommon.LOGGER.info("[FG_1.3] Invoking 'initializePath' with arg 'java.library.path'.");
+			GradleStartCommon.LOGGER.info("[FG_1.3] Path Value: "+aPathData);
+			final Object usrPathsValue = initializePathMethod.invoke(null, "java.library.path");
+			final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
+			GradleStartCommon.LOGGER.info("[FG_1.3] Setting private field 'usr_paths' to be accessible.");
+			usrPathsField.setAccessible(true);
+			GradleStartCommon.LOGGER.info("[FG_1.3] Injecting path data.");
+			usrPathsField.set(null, usrPathsValue);
+			GradleStartCommon.LOGGER.info("[FG_1.3] Finished Classloader hack.");
+		}
+		catch(Throwable t) {
+			GradleStartCommon.LOGGER.info("[FG_1.3] Error handling Classloader hack, printing stack trace.");
+			t.printStackTrace();
+		};
+	}
 
-        if (MC_VERSION.startsWith("1.7"))
-            classname = FML_PACK_OLD + "." + classname;
-        else
-            classname = FML_PACK_NEW + "." + classname;
+	/* ----------- REFLECTION HELPER --------- */
 
-        return Class.forName(classname, true, loader);
-    }
+	private static final String MC_VERSION   = "@@MCVERSION@@";
+	private static final String FML_PACK_OLD = "cpw.mods";
+	private static final String FML_PACK_NEW = "net.minecraftforge";
 
-    /* ----------- COREMOD AND AT HACK --------- */
+	@SuppressWarnings("rawtypes")
+	protected static Class getFmlClass(String classname) throws ClassNotFoundException
+	{
+		return getFmlClass(classname, GradleStartCommon.class.getClassLoader());
+	}
 
-    // coremod hack
-    private static final String           COREMOD_VAR   = "fml.coreMods.load";
-    private static final String           COREMOD_MF    = "FMLCorePlugin";
-    // AT hack
-    private static final String           MOD_ATD_CLASS = "fml.common.asm.transformers.ModAccessTransformer";
-    private static final String           MOD_AT_METHOD = "addJar";
+	@SuppressWarnings("rawtypes")
+	public static Class getFmlClass(String classname, ClassLoader loader) throws ClassNotFoundException
+	{
+		if (!classname.startsWith("fml")) // dummy check myself
+			throw new IllegalArgumentException("invalid FML classname");
 
-    public static final Map<String, File> coreMap       = Maps.newHashMap();
+		if (MC_VERSION.startsWith("1.7"))
+			classname = FML_PACK_OLD + "." + classname;
+		else
+			classname = FML_PACK_NEW + "." + classname;
 
-    @SuppressWarnings("unchecked")
-    private void searchCoremods() throws Exception
-    {
-        // intialize AT hack Method
-        Method atRegistrar = null;
-        try
-        {
-            atRegistrar = getFmlClass(MOD_ATD_CLASS).getDeclaredMethod(MOD_AT_METHOD, JarFile.class);
-        }
-        catch (Throwable t)
-        {}
+		return Class.forName(classname, true, loader);
+	}
 
-        for (URL url : ((URLClassLoader) GradleStartCommon.class.getClassLoader()).getURLs())
-        {
-            if (!url.getProtocol().startsWith("file")) // because file urls start with file://
-                continue; //         this isnt a file
+	/* ----------- COREMOD AND AT HACK --------- */
 
-            File coreMod = new File(url.toURI().getPath());
-            Manifest manifest = null;
+	// coremod hack
+	private static final String           COREMOD_VAR   = "fml.coreMods.load";
+	private static final String           COREMOD_MF    = "FMLCorePlugin";
+	// AT hack
+	private static final String           MOD_ATD_CLASS = "fml.common.asm.transformers.ModAccessTransformer";
+	private static final String           MOD_AT_METHOD = "addJar";
 
-            if (!coreMod.exists())
-                continue;
+	public static final Map<String, File> coreMap       = Maps.newHashMap();
 
-            if (coreMod.isDirectory())
-            {
-                File manifestMF = new File(coreMod, "META-INF/MANIFEST.MF");
-                if (manifestMF.exists())
-                {
-                    FileInputStream stream = new FileInputStream(manifestMF);
-                    manifest = new Manifest(stream);
-                    stream.close();
-                }
-            }
-            else if (coreMod.getName().endsWith("jar")) // its a jar
-            {
-                JarFile jar = new JarFile(coreMod);
-                manifest = jar.getManifest();
-                if (atRegistrar != null && manifest != null)
-                    atRegistrar.invoke(null, jar);
-                jar.close();
-            }
+	@SuppressWarnings("unchecked")
+	private void searchCoremods() throws Exception
+	{
+		// intialize AT hack Method
+		Method atRegistrar = null;
+		try
+		{
+			atRegistrar = getFmlClass(MOD_ATD_CLASS).getDeclaredMethod(MOD_AT_METHOD, JarFile.class);
+		}
+		catch (Throwable t)
+		{}
 
-            // we got the manifest? use it.
-            if (manifest != null)
-            {
-                String clazz = manifest.getMainAttributes().getValue(COREMOD_MF);
-                if (!Strings.isNullOrEmpty(clazz))
-                {
-                    LOGGER.info("Found and added coremod: " + clazz);
-                    coreMap.put(clazz, coreMod);
-                }
-            }
-        }
+		for (URL url : ((URLClassLoader) GradleStartCommon.class.getClassLoader()).getURLs())
+		{
+			if (!url.getProtocol().startsWith("file")) // because file urls start with file://
+				continue; //         this isnt a file
 
-        // set property.
-        Set<String> coremodsSet = Sets.newHashSet();
-        if (!Strings.isNullOrEmpty(System.getProperty(COREMOD_VAR)))
-            coremodsSet.addAll(Splitter.on(',').splitToList(System.getProperty(COREMOD_VAR)));
-        coremodsSet.addAll(coreMap.keySet());
-        System.setProperty(COREMOD_VAR, Joiner.on(',').join(coremodsSet));
+			File coreMod = new File(url.toURI().getPath());
+			Manifest manifest = null;
 
-        // ok.. tweaker hack now.
-        if (!Strings.isNullOrEmpty(getTweakClass()))
-        {
-            extras.add("--tweakClass");
-            extras.add("net.minecraftforge.gradle.tweakers.CoremodTweaker");
-        }
-    }
+			if (!coreMod.exists())
+				continue;
 
-    /* ----------- CUSTOM TWEAKER FOR COREMOD HACK --------- */
+			if (coreMod.isDirectory())
+			{
+				File manifestMF = new File(coreMod, "META-INF/MANIFEST.MF");
+				if (manifestMF.exists())
+				{
+					FileInputStream stream = new FileInputStream(manifestMF);
+					manifest = new Manifest(stream);
+					stream.close();
+				}
+			}
+			else if (coreMod.getName().endsWith("jar")) // its a jar
+			{
+				JarFile jar = new JarFile(coreMod);
+				manifest = jar.getManifest();
+				if (atRegistrar != null && manifest != null)
+					atRegistrar.invoke(null, jar);
+				jar.close();
+			}
 
-    // here and not in the tweaker package because classloader hell
-    public static final class AccessTransformerTransformer implements IClassTransformer
-    {
-        public AccessTransformerTransformer()
-        {
-            doStuff((LaunchClassLoader) getClass().getClassLoader());
-        }
+			// we got the manifest? use it.
+			if (manifest != null)
+			{
+				String clazz = manifest.getMainAttributes().getValue(COREMOD_MF);
+				if (!Strings.isNullOrEmpty(clazz))
+				{
+					LOGGER.info("Found and added coremod: " + clazz);
+					coreMap.put(clazz, coreMod);
+				}
+			}
+		}
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        private void doStuff(LaunchClassLoader classloader)
-        {
-            // the class and instance of ModAccessTransformer
-            Class<? extends IClassTransformer> clazz = null;
-            IClassTransformer instance = null;
+		// set property.
+		Set<String> coremodsSet = Sets.newHashSet();
+		if (!Strings.isNullOrEmpty(System.getProperty(COREMOD_VAR)))
+			coremodsSet.addAll(Splitter.on(',').splitToList(System.getProperty(COREMOD_VAR)));
+		coremodsSet.addAll(coreMap.keySet());
+		System.setProperty(COREMOD_VAR, Joiner.on(',').join(coremodsSet));
 
-            // find the instance I want. AND grab the type too, since thats better than Class.forName()
-            for (IClassTransformer transformer : classloader.getTransformers())
-            {
-                if (transformer.getClass().getCanonicalName().endsWith(MOD_ATD_CLASS))
-                {
-                    clazz = transformer.getClass();
-                    instance = transformer;
-                }
-            }
+		// ok.. tweaker hack now.
+		if (!Strings.isNullOrEmpty(getTweakClass()))
+		{
+			extras.add("--tweakClass");
+			extras.add("net.minecraftforge.gradle.tweakers.CoremodTweaker");
+		}
+	}
 
-            // impossible! but i will ignore it.
-            if (clazz == null || instance == null)
-            {
-                LOGGER.log(Level.ERROR, "ModAccessTransformer was somehow not found.");
-                return;
-            }
+	/* ----------- CUSTOM TWEAKER FOR COREMOD HACK --------- */
 
-            // grab the list of Modifiers I wanna mess with
-            Collection<Object> modifiers = null;
-            try
-            {
-                // super class of ModAccessTransformer is AccessTransformer
-                Field f = clazz.getSuperclass().getDeclaredFields()[1]; // its the modifiers map. Only non-static field there.
-                f.setAccessible(true);
+	// here and not in the tweaker package because classloader hell
+	public static final class AccessTransformerTransformer implements IClassTransformer
+	{
+		public AccessTransformerTransformer()
+		{
+			doStuff((LaunchClassLoader) getClass().getClassLoader());
+		}
 
-                modifiers = ((com.google.common.collect.Multimap) f.get(instance)).values();
-            }
-            catch (Throwable t)
-            {
-                LOGGER.log(Level.ERROR, "AccessTransformer.modifiers field was somehow not found...");
-                return;
-            }
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		private void doStuff(LaunchClassLoader classloader)
+		{
+			// the class and instance of ModAccessTransformer
+			Class<? extends IClassTransformer> clazz = null;
+			IClassTransformer instance = null;
 
-            if (modifiers.isEmpty())
-            {
-                return; // hell no am I gonna do stuff if its empty..
-            }
+			// find the instance I want. AND grab the type too, since thats better than Class.forName()
+			for (IClassTransformer transformer : classloader.getTransformers())
+			{
+				if (transformer.getClass().getCanonicalName().endsWith(MOD_ATD_CLASS))
+				{
+					clazz = transformer.getClass();
+					instance = transformer;
+				}
+			}
 
-            // grab the field I wanna hack
-            Field nameField = null;
-            try
-            {
-                // get 1 from the collection
-                Object mod = null;
-                for (Object val : modifiers)
-                {
-                    mod = val;
-                    break;
-                } // i wish this was cleaner
+			// impossible! but i will ignore it.
+			if (clazz == null || instance == null)
+			{
+				LOGGER.log(Level.ERROR, "ModAccessTransformer was somehow not found.");
+				return;
+			}
 
-                nameField = mod.getClass().getFields()[0]; // first field. "name"
-                nameField.setAccessible(true); // its alreadypublic, but just in case
-            }
-            catch (Throwable t)
-            {
-                LOGGER.log(Level.ERROR, "AccessTransformer.Modifier.name field was somehow not found...");
-                return;
-            }
+			// grab the list of Modifiers I wanna mess with
+			Collection<Object> modifiers = null;
+			try
+			{
+				// super class of ModAccessTransformer is AccessTransformer
+				Field f = clazz.getSuperclass().getDeclaredFields()[1]; // its the modifiers map. Only non-static field there.
+				f.setAccessible(true);
 
-            // read the field and method CSV files.
-            Map<String, String> nameMap = Maps.newHashMap();
-            try
-            {
-                readCsv(new File(CSV_DIR, "fields.csv"), nameMap);
-                readCsv(new File(CSV_DIR, "methods.csv"), nameMap);
-            }
-            catch (IOException e)
-            {
-                // If I cant find these.. something is terribly wrong.
-                LOGGER.log(Level.ERROR, "Could not load CSV files!");
-                e.printStackTrace();
-                return;
-            }
+				modifiers = ((com.google.common.collect.Multimap) f.get(instance)).values();
+			}
+			catch (Throwable t)
+			{
+				LOGGER.log(Level.ERROR, "AccessTransformer.modifiers field was somehow not found...");
+				return;
+			}
 
-            LOGGER.log(Level.INFO, "Remapping AccessTransformer rules...");
+			if (modifiers.isEmpty())
+			{
+				return; // hell no am I gonna do stuff if its empty..
+			}
 
-            // finally hit the modifiers
-            for (Object modifier : modifiers) // these are instances of AccessTransformer.Modifier
-            {
-                String name;
-                try
-                {
-                    name = (String) nameField.get(modifier);
-                    String newName = nameMap.get(name);
-                    if (newName != null)
-                    {
-                        nameField.set(modifier, newName);
-                    }
-                }
-                catch (Exception e)
-                {
-                    // impossible. It would have failed earlier if possible.
-                }
-            }
-        }
+			// grab the field I wanna hack
+			Field nameField = null;
+			try
+			{
+				// get 1 from the collection
+				Object mod = null;
+				for (Object val : modifiers)
+				{
+					mod = val;
+					break;
+				} // i wish this was cleaner
 
-        private void readCsv(File file, Map<String, String> map) throws IOException
-        {
-            LOGGER.log(Level.DEBUG, "Reading CSV file: {}", file);
-            Splitter split = Splitter.on(',').trimResults().limit(3);
-            for (String line : Files.readLines(file, Charsets.UTF_8))
-            {
-                if (line.startsWith("searge")) // header line
-                    continue;
+				nameField = mod.getClass().getFields()[0]; // first field. "name"
+				nameField.setAccessible(true); // its alreadypublic, but just in case
+			}
+			catch (Throwable t)
+			{
+				LOGGER.log(Level.ERROR, "AccessTransformer.Modifier.name field was somehow not found...");
+				return;
+			}
 
-                List<String> splits = split.splitToList(line);
-                map.put(splits.get(0), splits.get(1));
-            }
-        }
+			// read the field and method CSV files.
+			Map<String, String> nameMap = Maps.newHashMap();
+			try
+			{
+				readCsv(new File(CSV_DIR, "fields.csv"), nameMap);
+				readCsv(new File(CSV_DIR, "methods.csv"), nameMap);
+			}
+			catch (IOException e)
+			{
+				// If I cant find these.. something is terribly wrong.
+				LOGGER.log(Level.ERROR, "Could not load CSV files!");
+				e.printStackTrace();
+				return;
+			}
 
-        @Override
-        public byte[] transform(String name, String transformedName, byte[] basicClass)
-        {
-            return basicClass; // nothing here
-        }
-    }
+			LOGGER.log(Level.INFO, "Remapping AccessTransformer rules...");
+
+			// finally hit the modifiers
+			for (Object modifier : modifiers) // these are instances of AccessTransformer.Modifier
+			{
+				String name;
+				try
+				{
+					name = (String) nameField.get(modifier);
+					String newName = nameMap.get(name);
+					if (newName != null)
+					{
+						nameField.set(modifier, newName);
+					}
+				}
+				catch (Exception e)
+				{
+					// impossible. It would have failed earlier if possible.
+				}
+			}
+		}
+
+		private void readCsv(File file, Map<String, String> map) throws IOException
+		{
+			LOGGER.log(Level.DEBUG, "Reading CSV file: {}", file);
+			Splitter split = Splitter.on(',').trimResults().limit(3);
+			for (String line : Files.readLines(file, Charsets.UTF_8))
+			{
+				if (line.startsWith("searge")) // header line
+					continue;
+
+				List<String> splits = split.splitToList(line);
+				map.put(splits.get(0), splits.get(1));
+			}
+		}
+
+		@Override
+		public byte[] transform(String name, String transformedName, byte[] basicClass)
+		{
+			return basicClass; // nothing here
+		}
+	}
 }

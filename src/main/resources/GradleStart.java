@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraftforge.gradle.GradleStartCommon;
-
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
@@ -25,6 +23,8 @@ import com.mojang.authlib.Agent;
 import com.mojang.authlib.exceptions.AuthenticationException;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
+
+import net.minecraftforge.gradle.GradleStartCommon;
 
 public class GradleStart extends GradleStartCommon
 {
@@ -42,6 +42,12 @@ public class GradleStart extends GradleStartCommon
         // hack natives.
         hackNatives();
         
+
+		int aArg = 0;
+		for (String s : args) {
+			GradleStartCommon.LOGGER.info("Arg "+(aArg++)+": "+s);					
+		}
+    	
         // launch
         (new GradleStart()).launch(args);
     }
@@ -83,31 +89,6 @@ public class GradleStart extends GradleStartCommon
         {
             setupAssets(argMap);
         }
-    }
-
-    private static void hackNatives()
-    {
-        String paths = System.getProperty("java.library.path");
-        String nativesDir = "@@NATIVESDIR@@";
-        
-        if (Strings.isNullOrEmpty(paths))
-            paths = nativesDir;
-        else
-            paths += File.pathSeparator + nativesDir;
-        
-        System.setProperty("java.library.path", paths);
-        
-        // hack the classloader now.
-        try
-        {
-            final Method initializePathMethod = ClassLoader.class.getDeclaredMethod("initializePath", String.class);
-            initializePathMethod.setAccessible(true);
-            final Object usrPathsValue = initializePathMethod.invoke(null, "java.library.path");
-            final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
-            usrPathsField.setAccessible(true);
-            usrPathsField.set(null, usrPathsValue);
-        }
-        catch(Throwable t) {};
     }
 
     private void attemptLogin(Map<String, String> argMap)
@@ -173,7 +154,7 @@ public class GradleStart extends GradleStartCommon
                     }
                     else
                     {
-                        GradleStartCommon.LOGGER.info("  " + key + ": INVALID HASH");
+                    	GradleStartCommon.LOGGER.info("  " + key + ": INVALID HASH");
                         virtual.delete();
                     }
                 }
@@ -181,11 +162,11 @@ public class GradleStart extends GradleStartCommon
                 {
                     if (!source.exists())
                     {
-                        GradleStartCommon.LOGGER.info("  " + key + ": NEW MISSING " + hash);
+                    	GradleStartCommon.LOGGER.info("  " + key + ": NEW MISSING " + hash);
                     }
                     else
                     {
-                        GradleStartCommon.LOGGER.info("  " + key + ": NEW ");
+                    	GradleStartCommon.LOGGER.info("  " + key + ": NEW ");
                         File parent = virtual.getParentFile();
                         if (!parent.exists())
                             parent.mkdirs();
@@ -196,7 +177,7 @@ public class GradleStart extends GradleStartCommon
 
             for (String key : existing.keySet())
             {
-                GradleStartCommon.LOGGER.info("  " + key + ": REMOVED");
+            	GradleStartCommon.LOGGER.info("  " + key + ": REMOVED");
                 File virtual = new File(assetVirtual, key);
                 virtual.delete();
             }
