@@ -8,14 +8,14 @@ group = 'net.minecraftforge.gradle'
 if (project.hasProperty("push_release")) {
 	if (System.env.BUILD_NUMBER == null)
 		throw new IllegalArgumentException('Can not push a release without specifying a build number in $BUILD_NUMBER')
-	version = '1.3.0.' + System.env.BUILD_NUMBER
+	version = '1.2.0.' + System.env.BUILD_NUMBER
 } else {
-	version = '1.3-SNAPSHOT'
+	version = '1.2-SNAPSHOT'
 }
 	
 archivesBaseName = 'ForgeGradle'
-targetCompatibility = '1.8'
-sourceCompatibility = '1.8'
+targetCompatibility = '1.6'
+sourceCompatibility = '1.6'
 
 //Compile against UTF-8
 compileTestJava.options.encoding = 'UTF-8'
@@ -59,7 +59,6 @@ jar {
 }
 
 configurations {
-    //deployerJars
     compileOnly
 }
 
@@ -90,9 +89,6 @@ dependencies {
     compile 'de.oceanlabs.mcp:RetroGuard:3.6.6'
     compile 'de.oceanlabs.mcp:mcinjector:3.2-SNAPSHOT'
     compile 'net.minecraftforge.srg2source:Srg2Source:3.2-SNAPSHOT'
-
-    // stupid maven
-    //deployerJars "org.apache.maven.wagon:wagon-ssh:2.2"
     
     //Stuff used in the GradleStart classes
     compileOnly 'com.mojang:authlib:1.5.16'
@@ -136,4 +132,25 @@ def getGitHash() {
     def process = 'git rev-parse --short HEAD'.execute()
     process.waitFor()
     return '-' + (process.exitValue() ? 'unknown' : process.text.trim())
+}
+
+if (!hasProperty("mavenUsername")) {
+    ext.mavenUsername="${System.getenv().MAVEN_USERNAME}"
+}
+if (!hasProperty("mavenPassword")) {
+    ext.mavenPassword="${System.getenv().MAVEN_PASSWORD}"
+}
+if (!hasProperty("mavenURL")) {
+    ext.mavenURL="${System.getenv().MAVEN_URL}"
+}
+ 
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            uniqueVersion = false
+            repository(url: mavenURL) {
+                authentication(userName: mavenUsername, password: mavenPassword)
+            }
+        }
+    }
 }
