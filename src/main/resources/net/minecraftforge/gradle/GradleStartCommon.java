@@ -61,7 +61,7 @@ public abstract class GradleStartCommon
 
 	protected void launch(String[] args) throws Throwable
 	{
-    	LOGGER.info("Loading ForgeGradle 1.2.1 - By Alkalus");
+		LOGGER.info("Loading ForgeGradle 1.2.1 - GT6 maven");
     	
 		// DEPRECATED, use the properties below instead!
 		System.setProperty("net.minecraftforge.gradle.GradleStart.srgDir", SRG_DIR.getCanonicalPath());
