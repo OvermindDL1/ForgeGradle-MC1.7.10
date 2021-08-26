@@ -40,9 +40,13 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/repositories/snapshots/"
     }	
+    // maven {
+    //     name = "forge"
+    //     url = "http://files.minecraftforge.net/maven"
+    // }
     maven {
-        name = "forge"
-        url = "http://files.minecraftforge.net/maven"
+           name = "gt"
+	   url = "https://gregtech.overminddl1.com/"
     }
     maven {
         name = "mojang"
@@ -147,7 +151,7 @@ if (!hasProperty("mavenURL")) {
 uploadArchives {
     repositories {
         mavenDeployer {
-            uniqueVersion = false
+            uniqueVersion = true
             repository(url: mavenURL) {
                 authentication(userName: mavenUsername, password: mavenPassword)
             }
