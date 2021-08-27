@@ -40,12 +40,7 @@ import net.minecraftforge.gradle.json.MCInjectorStruct.InnerClass;
 import net.minecraftforge.gradle.tasks.abstractutil.CachedTask;
 
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.*;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -80,7 +75,6 @@ public class ProcessJarTask extends CachedTask
     @InputFile
     private DelayedFile            exceptorCfg;
 
-    @Optional
     @Input
     private boolean stripSynthetics = false;
 
@@ -90,14 +84,19 @@ public class ProcessJarTask extends CachedTask
     @Input
     private boolean applyMarkers = false;
 
+    @Internal
     private DelayedFile outCleanJar; // clean = pure forge, or pure FML
+
+    @Internal
     private DelayedFile outDirtyJar = new DelayedFile(getProject(), "{BUILD_DIR}/processed.jar"); // dirty = has any other ATs
 
     @InputFiles
     private ArrayList<DelayedFile> ats         = new ArrayList<DelayedFile>();
 
+    @Internal
     private DelayedFile log;
 
+    @Internal
     private boolean isClean = true;
 
     public void addTransformerClean(DelayedFile... obj)
@@ -499,7 +498,7 @@ public class ProcessJarTask extends CachedTask
         this.outDirtyJar = outDirtyJar;
     }
 
-    public boolean isClean()
+    public boolean getIsClean()
     {
         return isClean;
     }
@@ -509,6 +508,7 @@ public class ProcessJarTask extends CachedTask
      * Unlike getOutputJar() this method does not resolve the files.
      * @return DelayedFIle that will resolve to
      */
+    @OutputFile
     public DelayedFile getDelayedOutput()
     {
         return isClean ? outCleanJar : outDirtyJar;
@@ -553,7 +553,7 @@ public class ProcessJarTask extends CachedTask
     @Override
     protected boolean defaultCache()
     {
-        return isClean();
+        return getIsClean();
     }
 
     public void setDirty()

@@ -41,6 +41,10 @@ public class UserPatchExtension extends UserExtension
         return ats;
     }
 
+    public boolean hasApiVersion() {
+        return apiVersion != null;
+    }
+
     public String getApiVersion()
     {
         if (apiVersion == null)

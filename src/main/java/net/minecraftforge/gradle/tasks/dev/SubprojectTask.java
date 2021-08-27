@@ -41,26 +41,27 @@ public class SubprojectTask extends DefaultTask
             {
                 if (configureTask != null)
                     configureTask.execute(t);
-                executeTask((AbstractTask) t);
+                //executeTask((AbstractTask) t);
+                if(true) throw new RuntimeException("TODO SubprojectTask");
             }
         }
 
         System.gc();
     }
 
-    private void executeTask(AbstractTask task)
-    {
-        for (Object dep : task.getTaskDependencies().getDependencies(task))
-        {
-            executeTask((AbstractTask) dep);
-        }
-
-        if (!task.getState().getExecuted())
-        {
-            getLogger().lifecycle(task.getPath());
-            task.execute();
-        }
-    }
+//    private void executeTask(AbstractTask task)
+//    {
+//        for (Object dep : task.getTaskDependencies().getDependencies(task))
+//        {
+//            executeTask((AbstractTask) dep);
+//        }
+//
+//        if (!task.getState().getExecuted())
+//        {
+//            getLogger().lifecycle(task.getPath());
+//            task.execute();
+//        }
+//    }
 
     public File getBuildFile()
     {

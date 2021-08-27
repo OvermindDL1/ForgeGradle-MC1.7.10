@@ -126,7 +126,7 @@ public class GenDevProjectsTask extends DefaultTask
         }
         a(o, 
             "",
-            "    testCompile 'junit:junit:4.5'", 
+            "    testImplementation 'junit:junit:4.5'",
             "}",
             ""
         );

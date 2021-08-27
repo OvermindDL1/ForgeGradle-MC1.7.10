@@ -27,6 +27,7 @@ import net.minecraftforge.gradle.tasks.user.ApplyBinPatchesTask;
 import net.minecraftforge.gradle.user.UserBasePlugin;
 import net.minecraftforge.gradle.user.UserConstants;
 
+import net.minecraftforge.gradle.user.UserExtension;
 import org.apache.tools.ant.types.Commandline;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -213,9 +214,9 @@ public abstract class UserPatchBasePlugin extends UserBasePlugin<UserPatchExtens
     }
 
     @Override
-    protected boolean hasApiVersion()
+    protected boolean hasApiVersion(UserPatchExtension exten)
     {
-        return true;
+        return exten.hasApiVersion();
     }
 
     @Override

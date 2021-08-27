@@ -12,6 +12,9 @@ import java.net.URL;
 import net.minecraftforge.gradle.common.Constants;
 
 import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
 import com.google.common.base.Charsets;
@@ -21,8 +24,13 @@ import com.google.common.io.Files;
 
 public class EtagDownloadTask extends DefaultTask
 {
-    Object  url;
-    Object  file;
+    @Input
+    Object url;
+
+    @OutputFile
+    Object file;
+
+    @Input
     boolean dieWithError;
 
     @TaskAction

@@ -59,9 +59,12 @@ public class ObfuscateTask extends DefaultTask
         AbstractTask compileTask = (AbstractTask) childProj.getTasks().getByName("compileJava");
         AbstractTask jarTask = (AbstractTask) childProj.getTasks().getByName(subTask);
 
-        // executing jar task
-        getLogger().debug("Executing child "+subTask+" task...");
-        executeTask(jarTask);
+        // TODO:  Fix this up so its a proper standalone task, like wtf on this design...
+        // No, no default jar obfuscation!
+        // // executing jar task
+        // getLogger().debug("Executing child "+subTask+" task...");
+        // executeTask(jarTask);
+        if(true) throw new RuntimeException("TODO ObfuscateTask");
         
         File inJar = (File)jarTask.property("archivePath");
 
@@ -98,19 +101,19 @@ public class ObfuscateTask extends DefaultTask
         obfuscate(inJar, (FileCollection)compileTask.property("classpath"), srg);
     }
 
-    private void executeTask(AbstractTask task)
-    {
-        for (Object dep : task.getTaskDependencies().getDependencies(task))
-        {
-            executeTask((AbstractTask) dep);
-        }
-
-        if (!task.getState().getExecuted())
-        {
-            getLogger().lifecycle(task.getPath());
-            task.execute();
-        }
-    }
+//    private void executeTask(AbstractTask task)
+//    {
+//        for (Object dep : task.getTaskDependencies().getDependencies(task))
+//        {
+//            executeTask((AbstractTask) dep);
+//        }
+//
+//        if (!task.getState().getExecuted())
+//        {
+//            getLogger().lifecycle(task.getPath());
+//            task.execute();
+//        }
+//    }
 
     private void obfuscate(File inJar, FileCollection classpath, File srg) throws FileNotFoundException, IOException
     {

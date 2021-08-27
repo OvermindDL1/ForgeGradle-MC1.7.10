@@ -1,21 +1,21 @@
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'maven'
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'maven-publish'
+//apply plugin: 'idea'
+//apply plugin: 'eclipse'
 
 group = 'net.minecraftforge.gradle'
 
 if (project.hasProperty("push_release")) {
 	if (System.env.BUILD_NUMBER == null)
 		throw new IllegalArgumentException('Can not push a release without specifying a build number in $BUILD_NUMBER')
-	version = '1.2.1.' + System.env.BUILD_NUMBER
+	version = '1.3.0.' + System.env.BUILD_NUMBER
 } else {
-	version = '1.2-SNAPSHOT'
+	version = '1.3-SNAPSHOT'
 }
 	
 archivesBaseName = 'ForgeGradle'
-targetCompatibility = '1.6'
-sourceCompatibility = '1.6'
+targetCompatibility = '1.8'
+sourceCompatibility = '1.8'
 
 //Compile against UTF-8
 compileTestJava.options.encoding = 'UTF-8'
@@ -24,79 +24,94 @@ compileJava.options.encoding = 'UTF-8'
 
 repositories {
 	mavenLocal()
-    mavenCentral()
-	jcenter()
+	mavenCentral()
 	maven {
 		name = "gt"
 		url = "https://gregtech.overminddl1.com/"
 	}	
-    maven {
-        // because Srg2Source needs an eclipse dependency.
-        name = "eclipse"
-        url = "https://repo.eclipse.org/content/groups/eclipse/"
-    }
-    maven {
-        // because SpecialSource doesnt have a full release
-        name = "sonatype"
-        url = "https://oss.sonatype.org/content/repositories/snapshots/"
-    }	
-    // maven {
-    //     name = "forge"
-    //     url = "http://files.minecraftforge.net/maven"
-    // }
-    maven {
-           name = "gt"
+	maven {
+		// because Srg2Source needs an eclipse dependency.
+		name = "eclipse"
+		url = "https://repo.eclipse.org/content/groups/eclipse/"
+	}
+	maven {
+		// because SpecialSource doesnt have a full release
+		name = "sonatype"
+		url = "https://oss.sonatype.org/content/repositories/snapshots/"
+	}
+	// maven {
+	//	 name = "forge"
+	//	 url = "http://files.minecraftforge.net/maven"
+	// }
+	maven {
+		   name = "gt"
 	   url = "https://gregtech.overminddl1.com/"
-    }
-    maven {
-        name = "mojang"
-        url = "https://libraries.minecraft.net/"
-    }
+	}
+	maven {
+		name = "mojang"
+		url = "https://libraries.minecraft.net/"
+	}
+}
+
+gradlePlugin {
+	plugins {
+		cauldron { id = 'cauldron'; implementationClass = 'net.minecraftforge.gradle.dev.CauldronDevPlugin' }
+		curseforge { id = 'curseforge'; implementationClass = 'net.minecraftforge.gradle.curseforge.CursePlugin' }
+		fml { id = 'fml'; implementationClass = 'net.minecraftforge.gradle.user.patch.FmlUserPlugin' }
+		fmldev { id = 'fmldev'; implementationClass = 'net.minecraftforge.gradle.dev.FmlDevPlugin' }
+		forge { id = 'forge'; implementationClass = 'net.minecraftforge.gradle.user.patch.ForgeUserPlugin' }
+		forgedev { id = 'forgedev'; implementationClass = 'net.minecraftforge.gradle.dev.ForgeDevPlugin' }
+		launch4j { id = 'launch4j'; implementationClass = 'edu.sc.seis.launch4j.Launch4jPlugin' }
+		liteloader { id = 'liteloader'; implementationClass = 'net.minecraftforge.gradle.user.lib.LiteLoaderPlugin' }
+		mcedu { id = 'mcedu'; implementationClass = 'net.minecraftforge.gradle.dev.EduDevPlugin' }
+	}
 }
 
 jar {
-    manifest {
-        attributes 'version':project.version, 'javaCompliance': project.targetCompatibility
-        attributes 'group':project.group
-        attributes 'Implementation-Version': project.version + getGitHash()
-    }
+	manifest {
+		attributes 'version':project.version, 'javaCompliance': project.targetCompatibility
+		attributes 'group':project.group
+		attributes 'Implementation-Version': project.version + getGitHash()
+	}
 }
 
 configurations {
-    compileOnly
 }
 
 dependencies {
-    compile gradleApi()
-    
-    // moved to the beginning to be the overrider
-    compile 'org.ow2.asm:asm-debug-all:5.0.3'
-    compile 'com.google.guava:guava:18.0'
+	// moved to the beginning to be the overrider
+	implementation 'org.ow2.asm:asm-debug-all:5.0.3'
+	implementation 'com.google.guava:guava:18.0'
 
-    compile 'net.sf.opencsv:opencsv:2.3' // reading CSVs.. also used by SpecialSource
-    compile 'com.cloudbees:diff4j:1.1' // for difing and patching
-    compile 'com.github.abrarsyed.jastyle:jAstyle:1.2' // formatting
-    compile 'net.sf.trove4j:trove4j:2.1.0' // because its awesome.
-    
-    compile 'com.github.jponge:lzma-java:1.3' // replaces the LZMA binary
-    compile 'com.nothome:javaxdelta:2.0.1' // GDIFF implementation for BinPatches
-    compile 'com.google.code.gson:gson:2.2.4' // Used instead of Argo for building changelog.
-    compile 'com.github.tony19:named-regexp:0.2.3' // 1.7 Named regexp features
-    
-    compile 'net.md-5:SpecialSource:1.7.3' // deobf and reobs
-    
-    // because curse
-    compile 'org.apache.httpcomponents:httpclient:4.3.3'
-    compile 'org.apache.httpcomponents:httpmime:4.3.3'
-    
-    // mcp stuff
-    compile 'de.oceanlabs.mcp:RetroGuard:3.6.6'
-    compile 'de.oceanlabs.mcp:mcinjector:3.2-SNAPSHOT'
-    compile 'net.minecraftforge.srg2source:Srg2Source:3.2-SNAPSHOT'
-    
-    //Stuff used in the GradleStart classes
-    compileOnly 'com.mojang:authlib:1.5.16'
-    compileOnly "net.minecraft:launchwrapper:1.11"
+	implementation 'net.sf.opencsv:opencsv:2.3' // reading CSVs.. also used by SpecialSource
+	implementation 'com.cloudbees:diff4j:1.1' // for difing and patching
+	implementation 'com.github.abrarsyed.jastyle:jAstyle:1.2' // formatting
+	implementation 'net.sf.trove4j:trove4j:2.1.0' // because its awesome.
+
+	implementation 'com.github.jponge:lzma-java:1.3' // replaces the LZMA binary
+	implementation 'com.nothome:javaxdelta:2.0.1' // GDIFF implementation for BinPatches
+	implementation 'com.google.code.gson:gson:2.2.4' // Used instead of Argo for building changelog.
+	implementation 'com.github.tony19:named-regexp:0.2.3' // 1.7 Named regexp features
+
+	implementation 'net.md-5:SpecialSource:1.7.3' // deobf and reobs
+
+	// because curse
+	implementation 'org.apache.httpcomponents:httpclient:4.3.3'
+	implementation 'org.apache.httpcomponents:httpmime:4.3.3'
+
+	// mcp stuff
+	implementation 'de.oceanlabs.mcp:RetroGuard:3.6.6'
+	implementation 'de.oceanlabs.mcp:mcinjector:3.2-SNAPSHOT'
+	implementation 'net.minecraftforge.srg2source:Srg2Source:3.2-SNAPSHOT'
+
+	//Stuff used in the GradleStart classes
+	compileOnly 'com.mojang:authlib:1.5.16'
+	compileOnly "net.minecraft:launchwrapper:1.11"
+}
+
+java {
+	withJavadocJar()
+	withSourcesJar()
 }
 
 compileJava {
@@ -105,56 +120,54 @@ compileJava {
 }
 
 javadoc {
-    classpath += configurations.compileOnly
-
-    // linked javadoc urls.. why not...
-    options.addStringOption 'link', 'https://gradle.org/docs/current/javadoc/'
-    options.addStringOption 'link', 'http://docs.guava-libraries.googlecode.com/git-history/v18.0/javadoc'
-    options.addStringOption 'link', 'http://asm.ow2.org/asm50/javadoc/user/'
+	// linked javadoc urls.. why not...
+	options.addStringOption 'link', 'https://gradle.org/docs/current/javadoc/'
+	options.addStringOption 'link', 'http://docs.guava-libraries.googlecode.com/git-history/v18.0/javadoc'
+	options.addStringOption 'link', 'http://asm.ow2.org/asm50/javadoc/user/'
 }
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    from javadoc
-    classifier = "javadoc"
-}
-
-artifacts {
-    archives jar
-    archives javadocJar
-}
-
-//These should add a compile time only dependancies to eclipse, ide, and javac, but NOT to the generated POM on maven.
-sourceSets.main.compileClasspath += [ configurations.compileOnly ]
-idea.module.scopes.PROVIDED.plus += [ configurations.compileOnly ]
-eclipse.classpath.plusConfigurations += [ configurations.compileOnly ]
 
 // write out version so its convenient for doc deployment
 file('build').mkdirs()
 file('build/version.txt').text = version;
 
 def getGitHash() {
-    def process = 'git rev-parse --short HEAD'.execute()
-    process.waitFor()
-    return '-' + (process.exitValue() ? 'unknown' : process.text.trim())
+	def process = 'git rev-parse --short HEAD'.execute()
+	process.waitFor()
+	return '-' + (process.exitValue() ? 'unknown' : process.text.trim())
+}
+
+wrapper {
+	gradleVersion = '7.2'
+	distributionUrl = distributionUrl.replace("bin", "all")
 }
 
 if (!hasProperty("mavenUsername")) {
-    ext.mavenUsername="${System.getenv().MAVEN_USERNAME}"
+	ext.mavenUsername="${System.getenv().MAVEN_USERNAME}"
 }
 if (!hasProperty("mavenPassword")) {
-    ext.mavenPassword="${System.getenv().MAVEN_PASSWORD}"
+	ext.mavenPassword="${System.getenv().MAVEN_PASSWORD}"
 }
 if (!hasProperty("mavenURL")) {
-    ext.mavenURL="${System.getenv().MAVEN_URL}"
+	ext.mavenURL="${System.getenv().MAVEN_URL}"
 }
- 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            uniqueVersion = true
-            repository(url: mavenURL) {
-                authentication(userName: mavenUsername, password: mavenPassword)
-            }
-        }
-    }
+
+publishing {
+	repositories {
+		maven {
+			url = mavenURL
+			authentication {
+				basic(BasicAuthentication)
+			}
+			credentials(PasswordCredentials) {
+				username = mavenUsername
+				password = mavenPassword
+			}
+		}
+	}
+
+	publications {
+		maven(MavenPublication) {
+			from components.java
+		}
+	}
 }

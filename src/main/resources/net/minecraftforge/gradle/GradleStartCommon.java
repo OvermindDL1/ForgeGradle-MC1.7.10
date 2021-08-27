@@ -61,7 +61,7 @@ public abstract class GradleStartCommon
 
 	protected void launch(String[] args) throws Throwable
 	{
-		LOGGER.info("Loading ForgeGradle 1.2.1 - GT6 maven");
+		LOGGER.info("Loading ForgeGradle 1.3.0 - GT6 maven");
     	
 		// DEPRECATED, use the properties below instead!
 		System.setProperty("net.minecraftforge.gradle.GradleStart.srgDir", SRG_DIR.getCanonicalPath());
@@ -204,22 +204,22 @@ public abstract class GradleStartCommon
 		try
 		{
 			String aPathData = System.getProperty("java.library.path");
-			GradleStartCommon.LOGGER.info("[FG_1.2.1] Doing Classloader hack.");
+			GradleStartCommon.LOGGER.info("[FG_1.3.0] Doing Classloader hack.");
 			final Method initializePathMethod = ClassLoader.class.getDeclaredMethod("initializePath", String.class);
-			GradleStartCommon.LOGGER.info("[FG_1.2.1] Setting private method 'initializePath' to be accessible.");
+			GradleStartCommon.LOGGER.info("[FG_1.3.0] Setting private method 'initializePath' to be accessible.");
 			initializePathMethod.setAccessible(true);
-			GradleStartCommon.LOGGER.info("[FG_1.2.1] Invoking 'initializePath' with arg 'java.library.path'.");
-			GradleStartCommon.LOGGER.info("[FG_1.2.1] Path Value: "+aPathData);
+			GradleStartCommon.LOGGER.info("[FG_1.3.0] Invoking 'initializePath' with arg 'java.library.path'.");
+			GradleStartCommon.LOGGER.info("[FG_1.3.0] Path Value: "+aPathData);
 			final Object usrPathsValue = initializePathMethod.invoke(null, "java.library.path");
 			final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
-			GradleStartCommon.LOGGER.info("[FG_1.2.1] Setting private field 'usr_paths' to be accessible.");
+			GradleStartCommon.LOGGER.info("[FG_1.3.0] Setting private field 'usr_paths' to be accessible.");
 			usrPathsField.setAccessible(true);
-			GradleStartCommon.LOGGER.info("[FG_1.2.1] Injecting path data.");
+			GradleStartCommon.LOGGER.info("[FG_1.3.0] Injecting path data.");
 			usrPathsField.set(null, usrPathsValue);
-			GradleStartCommon.LOGGER.info("[FG_1.2.1] Finished Classloader hack.");
+			GradleStartCommon.LOGGER.info("[FG_1.3.0] Finished Classloader hack.");
 		}
 		catch(Throwable t) {
-			GradleStartCommon.LOGGER.info("[FG_1.2.1] Error handling Classloader hack, printing stack trace.");
+			GradleStartCommon.LOGGER.info("[FG_1.3.0] Error handling Classloader hack, printing stack trace.");
 			t.printStackTrace();
 		};
 	}

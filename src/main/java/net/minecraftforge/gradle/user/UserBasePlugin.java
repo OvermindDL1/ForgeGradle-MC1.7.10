@@ -9,7 +9,6 @@ import groovy.lang.Closure;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -67,7 +66,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin<T>
@@ -77,9 +75,9 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
     public void applyPlugin()
     {
         this.applyExternalPlugin("java");
-        this.applyExternalPlugin("maven");
-        this.applyExternalPlugin("eclipse");
-        this.applyExternalPlugin("idea");
+        //this.applyExternalPlugin("maven");
+        //this.applyExternalPlugin("eclipse");
+        //this.applyExternalPlugin("idea");
 
         hasScalaBefore = project.getPlugins().hasPlugin("scala");
         hasGroovyBefore = project.getPlugins().hasPlugin("groovy");
@@ -120,7 +118,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
                 TaskExecutionGraph graph = project.getGradle().getTaskGraph();
                 String path = project.getPath();
                 
-                graph.getAllTasks().clear();
+                //graph.getAllTasks().clear(); // TODO:  Why did this exist?
 
                 if (graph.hasTask(path + "setupDecompWorkspace"))
                 {
@@ -171,7 +169,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
      * may not include delayed tokens.
      * @return has an api version
      */
-    protected abstract boolean hasApiVersion();
+    protected abstract boolean hasApiVersion(T exten);
     /**
      * May invoke the extension object, or be hardcoded.
      * may not include delayed tokens.
@@ -281,7 +279,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             pattern = pattern.replace("{MAPPING_VERSION}", "");
         }
 
-        if (hasApiVersion())
+        if (hasApiVersion(exten))
             pattern = pattern.replace("{API_VERSION}", getApiVersion(exten));
 
         pattern = pattern.replace("{API_NAME}", getApiName());
@@ -325,12 +323,15 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         project.getDependencies().add(CONFIG_START, project.files(delayedFile(getStartDir())));
 
         // extra libs folder.
-        project.getDependencies().add("compile", project.fileTree("libs"));
+        project.getDependencies().add("runtimeOnly", project.fileTree("libs"));
 
         // make MC dependencies into normal compile classpath
-        project.getDependencies().add("compile", project.getConfigurations().getByName(CONFIG_DEPS));
-        project.getDependencies().add("compile", project.getConfigurations().getByName(CONFIG_MC));
-        project.getDependencies().add("runtime", project.getConfigurations().getByName(CONFIG_START));
+        project.getConfigurations().getByName("compileOnly").extendsFrom(project.getConfigurations().getByName(CONFIG_DEPS));
+        project.getConfigurations().getByName("compileOnly").extendsFrom(project.getConfigurations().getByName(CONFIG_MC));
+        project.getConfigurations().getByName("compileOnly").extendsFrom(project.getConfigurations().getByName(CONFIG_START));
+//        project.getDependencies().add("compileOnly", project.getConfigurations().getByName(CONFIG_DEPS));
+//        project.getDependencies().add("compileOnly", project.getConfigurations().getByName(CONFIG_MC));
+//        project.getDependencies().add("runtimeOnly", project.getConfigurations().getByName(CONFIG_START));
     }
 
     /**
@@ -346,25 +347,27 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         SourceSet api = javaConv.getSourceSets().create("api");
 
         // set the Source
-        javaConv.setSourceCompatibility("1.6");
-        javaConv.setTargetCompatibility("1.6");
+        javaConv.setSourceCompatibility("1.8");
+        javaConv.setTargetCompatibility("1.8");
 
         main.setCompileClasspath(main.getCompileClasspath().plus(api.getOutput()));
         test.setCompileClasspath(test.getCompileClasspath().plus(api.getOutput()));
 
-        project.getConfigurations().getByName("apiCompile").extendsFrom(project.getConfigurations().getByName("compile"));
-        project.getConfigurations().getByName("testCompile").extendsFrom(project.getConfigurations().getByName("apiCompile"));
-        
         // set compile not to take from libs
         JavaCompile compileTask = ((JavaCompile)project.getTasks().getByName(main.getCompileJavaTaskName()));
-        List<String> args = compileTask.getOptions().getCompilerArgs();
-        if (args == null || args.isEmpty())
-        {
-            args = Lists.newArrayList();
-        }
-        args.add("-sourcepath");
-        args.add(".");
-        compileTask.getOptions().setCompilerArgs(args);
+
+        // TODO: Wait why was this here?
+//        ConfigurableFileCollection files = project.files(compileTask.getOptions().getSourcepath());
+//        files.from(".");
+//        compileTask.getOptions().setSourcepath(files);
+//        List<String> args = compileTask.getOptions().getCompilerArgs();
+//        if (args == null || args.isEmpty())
+//        {
+//            args = Lists.newArrayList();
+//        }
+//        args.add("-sourcepath");
+//        args.add(".");
+//        compileTask.getOptions().setCompilerArgs(args);
     }
 
     private void readAndApplyJson(File file, String depConfig, String nativeConfig, Logger log)
@@ -621,7 +624,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         }
 
         {
-            String name = getBinDepName() + "-" + (hasApiVersion() ? "{API_VERSION}" : "{MC_VERSION}") + ".jar";
+            String name = getBinDepName() + "-" + (hasApiVersion(getExtension()) ? "{API_VERSION}" : "{MC_VERSION}") + ".jar";
 
             ProcessJarTask task = makeTask("deobfBinJar", ProcessJarTask.class);
             task.setSrg(delayedFile(DEOBF_MCP_SRG));
@@ -639,7 +642,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         }
 
         {
-            String name = "{API_NAME}-" + (hasApiVersion() ? "{API_VERSION}" : "{MC_VERSION}") + "-"+ CLASSIFIER_DEOBF_SRG +".jar";
+            String name = "{API_NAME}-" + (hasApiVersion(getExtension()) ? "{API_VERSION}" : "{MC_VERSION}") + "-"+ CLASSIFIER_DEOBF_SRG +".jar";
 
             ProcessJarTask task = makeTask("deobfuscateJar", ProcessJarTask.class);
             task.setSrg(delayedFile(DEOBF_SRG_SRG));
@@ -664,7 +667,8 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
 
             task.mustRunAfter("test");
             project.getTasks().getByName("assemble").dependsOn(task);
-            project.getTasks().getByName("uploadArchives").dependsOn(task);
+            if (project.getTasks().findByName("publish") != null)
+                project.getTasks().getByName("publish").dependsOn(task);
         }
 
         {
@@ -739,7 +743,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             @Override
             public boolean isSatisfiedBy(Object obj)
             {
-                boolean didWork = ((Task) obj).dependsOnTaskDidWork();
+                boolean didWork = ((Task) obj).getDidWork();
                 boolean exists = recomp.call().exists();
                 if (!exists)
                     return true;
@@ -809,7 +813,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         JavaExec exec = makeTask("runClient", JavaExec.class);
         {
             exec.doFirst(new MakeDirExist(delayedFile("{RUN_DIR}")));
-            exec.setMain(GRADLE_START_CLIENT);
+            exec.getMainClass().set(GRADLE_START_CLIENT);
             //exec.jvmArgs("-Xincgc", "-Xmx1024M", "-Xms1024M", "-Dfml.ignoreInvalidMinecraftCertificates=true");
             exec.args(getClientRunArgs());
             exec.workingDir(delayedFile("{RUN_DIR}"));
@@ -825,7 +829,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         exec = makeTask("runServer", JavaExec.class);
         {
             exec.doFirst(new MakeDirExist(delayedFile("{RUN_DIR}")));
-            exec.setMain(GRADLE_START_SERVER);
+            exec.getMainClass().set(GRADLE_START_SERVER);
             exec.jvmArgs("-Xincgc", "-Dfml.ignoreInvalidMinecraftCertificates=true");
             exec.workingDir(delayedFile("{RUN_DIR}"));
             exec.args(getServerRunArgs());
@@ -855,7 +859,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
                     project.getLogger().error("");
                 }
             });
-            exec.setMain(GRADLE_START_CLIENT);
+            exec.getMainClass().set(GRADLE_START_CLIENT);
             exec.jvmArgs("-Xincgc", "-Xmx1024M", "-Xms1024M", "-Dfml.ignoreInvalidMinecraftCertificates=true");
             exec.args(getClientRunArgs());
             exec.workingDir(delayedFile("{RUN_DIR}"));
@@ -885,7 +889,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
                     project.getLogger().error("");
                 }
             });
-            exec.setMain(GRADLE_START_SERVER);
+            exec.getMainClass().set(GRADLE_START_SERVER);
             exec.jvmArgs("-Xincgc", "-Dfml.ignoreInvalidMinecraftCertificates=true");
             exec.workingDir(delayedFile("{RUN_DIR}"));
             exec.args(getServerRunArgs());
@@ -895,7 +899,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             exec.setDebug(true);
 
             exec.setGroup("ForgeGradle");
-            exec.setDescription("Runs the Minecraft serevr in debug mode");
+            exec.setDescription("Runs the Minecraft server in debug mode");
 
             exec.dependsOn("makeStart");
         }
@@ -968,7 +972,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         // version checks
         {
             String version = getMcVersion(getExtension());
-            if (hasApiVersion())
+            if (hasApiVersion(getExtension()))
                 version = getApiVersion(getExtension());
 
             doVersionChecks(version);
@@ -1051,7 +1055,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         // configure output of recompile task
         {
             JavaCompile compile = (JavaCompile) project.getTasks().getByName("recompMinecraft");
-            compile.setDestinationDir(delayedFile(RECOMP_CLS_DIR).call());
+            compile.getDestinationDirectory().set(delayedFile(RECOMP_CLS_DIR).call());
         }
 
         // configure output of repackage task.
@@ -1061,8 +1065,8 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
 
             //done in the delayed configuration.
             File out = recomp.call();
-            repackageTask.setArchiveName(out.getName());
-            repackageTask.setDestinationDir(out.getParentFile());
+            repackageTask.getArchiveFileName().set(out.getName());
+            repackageTask.getDestinationDirectory().set(out.getParentFile());
         }
         
         {
@@ -1094,28 +1098,28 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
 
         JavaExec exec = (JavaExec) project.getTasks().getByName("runClient");
         {
-            exec.classpath(project.getConfigurations().getByName("runtime"));
+            exec.classpath(project.getConfigurations().getByName("runtimeOnly"));
             exec.classpath(jarTask.getArchivePath());
             exec.dependsOn(jarTask);
         }
 
         exec = (JavaExec) project.getTasks().getByName("runServer");
         {
-            exec.classpath(project.getConfigurations().getByName("runtime"));
+            exec.classpath(project.getConfigurations().getByName("runtimeOnly"));
             exec.classpath(jarTask.getArchivePath());
             exec.dependsOn(jarTask);
         }
 
         exec = (JavaExec) project.getTasks().getByName("debugClient");
         {
-            exec.classpath(project.getConfigurations().getByName("runtime"));
+            exec.classpath(project.getConfigurations().getByName("runtimeOnly"));
             exec.classpath(jarTask.getArchivePath());
             exec.dependsOn(jarTask);
         }
 
         exec = (JavaExec) project.getTasks().getByName("debugServer");
         {
-            exec.classpath(project.getConfigurations().getByName("runtime"));
+            exec.classpath(project.getConfigurations().getByName("runtimeOnly"));
             exec.classpath(jarTask.getArchivePath());
             exec.dependsOn(jarTask);
         }
@@ -1132,7 +1136,6 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             @Override
             public void execute(Object arg0)
             {
-                ((ScalaCompile) arg0).getScalaCompileOptions().setUseAnt(false);
             }
         });
     }
@@ -1146,6 +1149,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
     {
         if (decomp)
         {
+            project.getTasks().getByName("reobf").dependsOn(project.getTasks().getByName("deobfuscateJar"));
             ((ReobfTask) project.getTasks().getByName("reobf")).setDeobfFile(((ProcessJarTask) project.getTasks().getByName("deobfuscateJar")).getDelayedOutput());
             ((ReobfTask) project.getTasks().getByName("reobf")).setRecompFile(delayedDirtyFile(getSrcDepName(), null, "jar"));
         }
@@ -1166,7 +1170,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
     protected void setMinecraftDeps(boolean decomp, boolean remove)
     {
         String version = getMcVersion(getExtension());
-        if (hasApiVersion())
+        if (hasApiVersion(getExtension()))
             version = getApiVersion(getExtension());
 
 
@@ -1229,14 +1233,14 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             public File resolveDelayed()
             {
                 ProcessJarTask decompDeobf = (ProcessJarTask) project.getTasks().getByName("deobfuscateJar");
-                pattern = (decompDeobf.isClean() ? "{API_CACHE_DIR}/"+(usesMappings ? MAPPING_APPENDAGE : "") : DIRTY_DIR) + "/";
+                pattern = (decompDeobf.getIsClean() ? "{API_CACHE_DIR}/"+(usesMappings ? MAPPING_APPENDAGE : "") : DIRTY_DIR) + "/";
 
                 if (!Strings.isNullOrEmpty(name))
                     pattern += name;
                 else
                     pattern += "{API_NAME}";
 
-                pattern += "-" + (hasApiVersion() ? "{API_VERSION}" : "{MC_VERSION}");
+                pattern += "-" + (hasApiVersion(getExtension()) ? "{API_VERSION}" : "{MC_VERSION}");
 
                 if (!Strings.isNullOrEmpty(classifier))
                     pattern+= "-"+classifier;

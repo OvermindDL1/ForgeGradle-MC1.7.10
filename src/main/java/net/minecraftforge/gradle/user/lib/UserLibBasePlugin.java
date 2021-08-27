@@ -53,7 +53,7 @@ public abstract class UserLibBasePlugin extends UserBasePlugin<UserExtension>
     }
 
     @Override
-    protected boolean hasApiVersion()
+    protected boolean hasApiVersion(UserExtension exten)
     {
         return false;
     }

@@ -43,12 +43,6 @@ public class FileLogListenner implements StandardOutputListener, BuildListener
             e.printStackTrace();
         }
     }
-    
-    @Override
-    public void projectsLoaded(Gradle arg0) {}
-    
-    @Override
-    public void buildStarted(Gradle arg0) {}
 
     @Override
     public void onOutput(CharSequence arg0)
@@ -81,5 +75,8 @@ public class FileLogListenner implements StandardOutputListener, BuildListener
     
     @Override
     public void settingsEvaluated(Settings arg0) {} // nothing
+
+    @Override
+    public void projectsLoaded(Gradle gradle) {} // nothing
 
 }

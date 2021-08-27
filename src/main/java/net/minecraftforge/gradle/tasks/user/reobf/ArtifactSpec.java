@@ -63,12 +63,12 @@ public class ArtifactSpec
     public ArtifactSpec(final AbstractArchiveTask task)
     {
         project = task.getProject();
-        baseName = new Closure(null) { public Object call() {return task.getBaseName();} };
-        appendix = new Closure(null) { public Object call() {return task.getAppendix();} };
-        version = new Closure(null) { public Object call() {return task.getVersion();} };
-        classifier = new Closure(null) { public Object call() {return task.getClassifier();} };
-        extension = new Closure(null) { public Object call() {return task.getExtension();} };
-        archiveName = new Closure(null) { public Object call() {return task.getArchiveName();} };
+        baseName = new Closure(null) { public Object call() {return task.getArchiveBaseName().get();} };
+        appendix = new Closure(null) { public Object call() {return task.getArchiveAppendix().getOrNull();} };
+        version = new Closure(null) { public Object call() {return task.getArchiveVersion().get();} };
+        classifier = new Closure(null) { public Object call() {return task.getArchiveClassifier().getOrNull();} };
+        extension = new Closure(null) { public Object call() {return task.getArchiveExtension().get();} };
+        archiveName = new Closure(null) { public Object call() {return task.getArchiveFileName().get();} };
         classpath = new Closure(null) { public Object call() {return task.getSource();} };
     }
 

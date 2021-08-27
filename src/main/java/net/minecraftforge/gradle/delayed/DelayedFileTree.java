@@ -39,8 +39,8 @@ public class DelayedFileTree extends DelayedBase<FileTree>
     public FileTree resolveDelayed()
     {
         if (zipTree)
-            //resolved = project.zipTree(DelayedString.resolve(pattern, project, resolvers));
-            return new FileTreeAdapter(new ZipFileTree(project.file(DelayedBase.resolve(pattern, project, resolvers))));
+            return project.zipTree(DelayedString.resolve(pattern, project, resolvers));
+            //return new FileTreeAdapter(new ZipFileTree(project.file(DelayedBase.resolve(pattern, project, resolvers))));
         else
             return project.fileTree(DelayedBase.resolve(pattern, project, resolvers));
     }

@@ -80,9 +80,9 @@ public abstract class DevBasePlugin extends BasePlugin<DevExtension>
             // apply L4J
             this.applyExternalPlugin("launch4j");
 
-            if (project.getTasks().findByName("uploadArchives") != null)
+            if (project.getTasks().findByName("publish") != null)
             {
-                project.getTasks().getByName("uploadArchives").dependsOn("launch4j");
+                project.getTasks().getByName("publish").dependsOn("launch4j");
             }
 
             task1 = makeTask("downloadBaseInstaller", DownloadTask.class);
