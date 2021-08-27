@@ -11,6 +11,7 @@ import net.minecraftforge.gradle.user.UserExtension;
 
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.PublishArtifact;
+import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 
 import com.google.common.base.Strings;
@@ -80,6 +81,7 @@ public class ArtifactSpec
     public void setBaseName(Object baseName)
     {
         this.baseName = baseName;
+        this.archiveName = null; // Also regenerate the archiveName
     }
 
     public Object getAppendix()
@@ -90,6 +92,7 @@ public class ArtifactSpec
     public void setAppendix(Object appendix)
     {
         this.appendix = appendix;
+        this.archiveName = null; // Also regenerate the archiveName
     }
 
     public Object getVersion()
@@ -100,6 +103,7 @@ public class ArtifactSpec
     public void setVersion(Object version)
     {
         this.version = version;
+        this.archiveName = null; // Also regenerate the archiveName
     }
 
     public Object getClassifier()
@@ -110,6 +114,7 @@ public class ArtifactSpec
     public void setClassifier(Object classifier)
     {
         this.classifier = classifier;
+        this.archiveName = null; // Also regenerate the archiveName
     }
 
     public Object getExtension()
@@ -120,6 +125,7 @@ public class ArtifactSpec
     public void setExtension(Object extension)
     {
         this.extension = extension;
+        this.archiveName = null; // Also regenerate the archiveName
     }
 
     public Object getClasspath()
@@ -142,6 +148,7 @@ public class ArtifactSpec
     public void setArchiveSet(boolean archiveSet)
     {
         this.archiveSet = archiveSet;
+        this.archiveName = null; // Also regenerate the archiveName
     }
 
     public Object getArchiveName()
@@ -193,8 +200,11 @@ public class ArtifactSpec
         srg = resolveFile(srg);
 
         // resolve classpath
-        if (classpath != null)
-            classpath = project.files(classpath);
+        if (classpath != null) {
+            JavaPluginConvention javaConv = (JavaPluginConvention) project.getConvention().getPlugins().get("java");
+            //javaConv.getSourceSets().getByName("main").getCompileClasspath();
+            classpath = project.files(classpath, javaConv.getSourceSets().getByName("main").getCompileClasspath());
+        }
 
         // skip if its already been set by the user.
         if (archiveSet && archiveName != null)

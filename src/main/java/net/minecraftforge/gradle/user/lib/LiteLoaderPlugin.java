@@ -91,18 +91,18 @@ public class LiteLoaderPlugin extends UserLibBasePlugin
         ((Jar) project.getTasks().getByName("jar")).setClassifier(((UserBasePlugin) otherPlugin).getApiName());
 
         //  configure reobf for litemod
-        ((ReobfTask) project.getTasks().getByName("reobf")).reobf(jarTask, new Action<ArtifactSpec>()
-        {
-            @Override
-            public void execute(ArtifactSpec spec)
-            {
-                spec.setSrgMcp();
-
-                JavaPluginConvention javaConv = (JavaPluginConvention) project.getConvention().getPlugins().get("java");
-                spec.setClasspath(javaConv.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath());
-            }
-
-        });
+//        ((ReobfTask) project.getTasks().getByName("reobf")).reobf(jarTask, new Action<ArtifactSpec>()
+//        {
+//            @Override
+//            public void execute(ArtifactSpec spec)
+//            {
+//                spec.setSrgMcp();
+//
+//                JavaPluginConvention javaConv = (JavaPluginConvention) project.getConvention().getPlugins().get("java");
+//                spec.setClasspath(javaConv.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getCompileClasspath());
+//            }
+//
+//        });
 
         project.getArtifacts().add("archives", jarTask);
     }

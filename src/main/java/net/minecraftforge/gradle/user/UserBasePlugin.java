@@ -1039,16 +1039,16 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         // add extraSRG lines to reobf task
         {
             ReobfTask task = ((ReobfTask) project.getTasks().getByName("reobf"));
-            task.reobf(project.getTasks().getByName("jar"), new Action<ArtifactSpec>()
-            {
-                @Override
-                public void execute(ArtifactSpec arg0)
-                {
-                    JavaPluginConvention javaConv = (JavaPluginConvention) project.getConvention().getPlugins().get("java");
-                    arg0.setClasspath(javaConv.getSourceSets().getByName("main").getCompileClasspath());
-                }
-
-            });
+//            task.reobf(project.getTasks().getByName("jar"), new Action<ArtifactSpec>()
+//            {
+//                @Override
+//                public void execute(ArtifactSpec arg0)
+//                {
+//                    JavaPluginConvention javaConv = (JavaPluginConvention) project.getConvention().getPlugins().get("java");
+//                    arg0.setClasspath(javaConv.getSourceSets().getByName("main").getCompileClasspath());
+//                }
+//
+//            });
             task.setExtraSrg(getExtension().getSrgExtra());
         }
 
