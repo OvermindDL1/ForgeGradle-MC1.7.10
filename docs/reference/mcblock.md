@@ -20,7 +20,7 @@ There are some public methods in the minecraft extension object that are meant t
 - `String getVersion()`
     - Returns the only the minecraft version. eg: `1.7.10`, `1.8`. For the Forge/fml version, use getApiVersion()
 - `String getMappings()`, `void setMappings(String mappings)`
-    - The argument for this method has only 1 notation, and that is `channel_version`, and it is validated against the [mcp json](http://export.mcpbot.bspk.rs/versions.json). The valid channels are currently `stable`, `stable_nodoc`, `snapshot`, `snapshot_nodoc` where the nodoc variants do not include the javadoc comments. If the argument is in the form `something_custom` the validation is skipped, and the user is expected to have made arrangements for their custom MCP mapping version. More information on custom MCP snapshots can be found [here](https://gist.github.com/AbrarSyed/0d1f7ebea8767e264038).
+    - The argument for this method has only 1 notation, and that is `channel_version`, and it is validated against the [mcp json](http://gregtech.overminddl1.com/srgs/versions.json). The valid channels are currently `stable`, `stable_nodoc`, `snapshot`, `snapshot_nodoc` where the nodoc variants do not include the javadoc comments. If the argument is in the form `something_custom` the validation is skipped, and the user is expected to have made arrangements for their custom MCP mapping version. More information on custom MCP snapshots can be found [here](https://gist.github.com/AbrarSyed/0d1f7ebea8767e264038).
 
 
 ### Source Replacement

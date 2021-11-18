@@ -958,9 +958,13 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
     public final void afterEvaluate()
     {
         String mcversion = getMcVersion(getExtension());
-        if (!getExtension().mappingsSet() && mcversion.startsWith("1.8"))
+        if (!getExtension().mappingsSet())
         {
-            getExtension().setMappings("snapshot_20141001"); //Default snapshots for 1.8
+            if (mcversion.startsWith("1.8")) {
+                getExtension().setMappings("snapshot_20141001"); //Default snapshots for 1.8
+            } else if (mcversion.startsWith("1.7.10")) {
+                getExtension().setMappings("stable_13"); //Default mcp for 1.7.10 in this forge/bspkrs broken era since they don't seem to know how to keep servers online with valid paths it seems...
+            }
         }
 
         super.afterEvaluate();
