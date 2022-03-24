@@ -171,7 +171,7 @@ public abstract class BasePlugin<K extends BaseExtension> implements Plugin<Proj
     
     private void setVersionInfoJson()
     {
-        File jsonCache = Constants.cacheFile(project, "caches", "minecraft", "McpMappings.json");
+        File jsonCache = Constants.cacheFile(project, "caches", "minecraft", "McpMappings.gson"); // Renamed because it needs a new unique name because forge doesn't know how to use gradles cache system properly...
         File etagFile = new File(jsonCache.getAbsolutePath() + ".etag");
         
         getExtension().mcpJson = JsonFactory.GSON.fromJson(
